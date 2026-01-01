@@ -1,0 +1,33 @@
+name: Update logo commit hash
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'logos/**'
+
+jobs:
+  update-hash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Get latest commit hash
+        id: commit
+        run: |
+          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Save commit hash to JSON
+        run: |
+          mkdir -p data
+          echo "{\"commit\": \"${{ env.COMMIT_HASH }}\"}" > data/logo-hash.json
+
+      - name: Commit hash JSON to repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/logo-hash.json
+          git commit -m "Update logo hash: ${{ env.COMMIT_HASH }}" || echo "No changes"
+          git push
